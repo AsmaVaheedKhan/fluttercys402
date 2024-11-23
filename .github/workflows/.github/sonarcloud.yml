@@ -1,0 +1,46 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch (adjust as needed)
+  pull_request:
+    branches:
+      - main  # Trigger on pull requests targeting the main branch
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'latest'  # You can specify a particular version here if needed
+
+    - name: Install dependencies
+      run: |
+        flutter pub get
+
+    - name: Run Flutter tests
+      run: |
+        flutter test
+
+    - name: Install SonarScanner
+      run: |
+        curl -sS https://get.sonarsource.com/sonar-scanner-cli-linux-x86-64-4.8.0.2856.tar.gz | tar xz -C $HOME
+        export PATH=$HOME/sonar-scanner-*/bin:$PATH
+
+    - name: Run SonarCloud analysis
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        sonar-scanner \
+          -Dsonar.organization=<your-sonarcloud-organization> \
+          -Dsonar.projectKey=<your-sonarcloud-project-key> \
+          -Dsonar.sources=lib \
+          -Dsonar.flutter=true
